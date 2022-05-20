@@ -66,9 +66,9 @@ class NodeAttention(nn.Module):
         b = rearrange(self.to_bias(pair_feats), 'b ... h -> b h ...') \
             if exists(pair_feats) else 0
         q, k, v, g = map(lambda t: rearrange(t, 'b ... (h d) -> b h ... d', h=h), (q, k, v, g))
-        node_logits = self._attn(q, k, v, b, mask)
-        node_logits = rearrange(g * node_logits, 'b h n d -> b n (h d)', h=h)
-        return self.to_out_node(node_logits)
+        attn_feats = self._attn(q, k, v, b, mask)
+        attn_feats = rearrange(torch.sigmoid(g) * attn_feats, 'b h n d -> b n (h d)', h=h)
+        return self.to_out_node(attn_feats)
 
     def _attn(self, q, k, v, b, mask: Optional[Tensor]) -> Tensor:
         """Perform attention update"""
